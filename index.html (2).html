@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planta Baixa — Sorting SSP23</title>
+<style>
+  :root{--amarelo:#FFE600;--preto:#111;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#d6d6d6;color:#111;}
+  .hide{display:none!important;}
+
+  .toolbar{position:sticky;top:0;z-index:50;background:var(--preto);color:#fff;display:flex;flex-wrap:wrap;
+    align-items:center;gap:10px;padding:10px 16px;border-bottom:4px solid var(--amarelo);}
+  .toolbar .brand{font-weight:800;color:var(--amarelo);letter-spacing:.5px;}
+  .toolbar .brand small{color:#bbb;font-weight:500;}
+  .toolbar .spacer{flex:1;}
+  .btn{background:var(--amarelo);color:#111;border:none;padding:7px 13px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;}
+  .btn:hover{filter:brightness(.92);}
+  .btn.ghost{background:#2a2a2a;color:#fff;border:1px solid #444;}
+  .btn.ghost:hover{background:#3a3a3a;}
+  .btn.big{font-size:15px;padding:11px 20px;}
+  .status{font-size:12px;color:#9adb9a;min-width:120px;}
+
+  /* abas */
+  .tabs{max-width:1280px;margin:14px auto 0;display:flex;gap:6px;}
+  .tab{background:#bdbdbd;color:#222;border:none;padding:10px 20px;border-radius:8px 8px 0 0;font-weight:800;font-size:14px;cursor:pointer;}
+  .tab.active{background:#fff;color:#111;box-shadow:0 -2px 6px rgba(0,0,0,.08);}
+
+  .folha{max-width:1280px;margin:0 auto 18px;background:#fff;padding:18px;border-radius:0 8px 8px 8px;box-shadow:0 6px 24px rgba(0,0,0,.18);}
+
+  .titulo{display:flex;border:2px solid #000;margin-bottom:14px;}
+  .titulo .lbl{background:#000;color:var(--amarelo);font-weight:800;padding:8px 14px;letter-spacing:1px;font-size:13px;display:flex;align-items:center;}
+  .titulo .main{background:var(--amarelo);flex:1;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;letter-spacing:1px;}
+
+  .legenda{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px;font-size:12px;align-items:center;}
+  .legenda .it{display:flex;align-items:center;gap:6px;}
+  .chip{width:16px;height:16px;border:1.5px solid #000;border-radius:3px;}
+  .chip.bip{background:#ff5252;} .chip.est{background:#2b2b2b;} .chip.doca{background:#fff;}
+  .chip.pesca{background:var(--amarelo);} .chip.sort{background:#000;}
+
+  .floor,.nivel{grid-template-columns:1fr 150px 1fr;}
+
+  .inducao .bh{background:#000;color:var(--amarelo);text-align:center;font-weight:800;font-size:12px;padding:6px;letter-spacing:1px;border:2px solid #000;}
+  /* faixa responsável abastecimento (acima da bipagem) */
+  .abast-top{border:2px solid #000;margin-bottom:6px;}
+  .abast-top .abast-h{background:var(--amarelo);color:#000;text-align:center;font-weight:800;font-size:12px;letter-spacing:1px;padding:5px;border-bottom:2px solid #000;}
+  .abast-row{display:flex;}
+  .abast-row .an{flex:1;text-align:center;font-size:12.5px;padding:6px;border-right:1px solid #ccc;outline:none;min-height:26px;}
+  .abast-row .an:last-child{border-right:none;}
+  .abast-row .an:focus{background:#fffbcc;}
+  .abast-row .an:empty:before{content:'—';color:#bbb;}
+  .nivel{display:grid;align-items:stretch;}
+  .beltseg{width:70px;justify-self:center;align-self:stretch;
+    background:repeating-linear-gradient(180deg,#8a8a8a 0 2px,#5f5f5f 2px 4px,#3a3a3a 4px 14px);
+    border-left:5px solid #9b9b9b;border-right:5px solid #9b9b9b;
+    box-shadow:inset 2px 0 0 #cfcfcf,inset -2px 0 0 #cfcfcf,0 0 0 1.5px #000;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:6px 0;}
+  .beltseg .seta{color:var(--amarelo);font-size:18px;text-shadow:0 0 3px #000;}
+  .side{display:flex;align-items:center;padding:8px 6px;gap:6px;}
+  .side.left{justify-content:flex-end;} .side.right{justify-content:flex-start;}
+  .conn{color:#ff5252;font-size:22px;font-weight:800;line-height:1;}
+  .bancada{width:178px;border:1.8px solid #000;border-radius:6px;overflow:hidden;background:#fff;}
+  .bancada .bt{background:#222;color:#fff;font-weight:800;font-size:11px;padding:4px 2px;display:flex;align-items:center;justify-content:center;gap:5px;}
+  .brow{display:flex;align-items:stretch;border-top:1px solid #e3e3e3;}
+  .brow .btag{font-size:9px;font-weight:800;text-transform:uppercase;display:flex;align-items:center;justify-content:center;width:62px;flex-shrink:0;letter-spacing:.2px;}
+  .brow .btag.bip{background:#ff5252;color:#fff;}
+  .brow .btag.etq{background:var(--amarelo);color:#000;}
+  .bancada .bn{flex:1;font-size:12px;padding:5px 4px;min-height:22px;outline:none;text-align:center;}
+  .bancada .bn:focus{background:#fffbcc;}
+  .bancada .bn:empty:before{content:'—';color:#bbb;}
+
+  .floor{display:grid;align-items:stretch;}
+  .col{display:flex;flex-direction:column;justify-content:space-around;gap:10px;padding:6px 0;}
+  .spine{display:flex;flex-direction:column;align-items:center;}
+  .esteira{flex:1;width:70px;
+    background:repeating-linear-gradient(180deg,#8a8a8a 0 2px,#5f5f5f 2px 4px,#3a3a3a 4px 14px);
+    border-left:5px solid #9b9b9b;border-right:5px solid #9b9b9b;
+    box-shadow:inset 2px 0 0 #cfcfcf,inset -2px 0 0 #cfcfcf,0 0 0 1.5px #000;position:relative;display:flex;flex-direction:column;
+    align-items:center;justify-content:space-between;padding:14px 0;}
+  .esteira .seta{color:var(--amarelo);font-size:22px;line-height:.7;text-shadow:0 0 3px #000;}
+  .esteira .vlabel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-90deg);color:#fff;font-weight:800;letter-spacing:3px;font-size:13px;white-space:nowrap;text-shadow:0 1px 3px #000;}
+  .pacote{width:34px;height:24px;background:linear-gradient(180deg,#d8b27c,#c69a5e);border:1.5px solid #6b4f2a;border-radius:2px;position:relative;box-shadow:0 2px 3px rgba(0,0,0,.45);flex-shrink:0;}
+  .pacote:before{content:'';position:absolute;left:50%;top:-1px;bottom:-1px;transform:translateX(-50%);width:9px;background:rgba(255,255,255,.35);}
+  .pacote:after{content:'';position:absolute;left:5px;top:5px;width:14px;height:3px;background:rgba(0,0,0,.25);box-shadow:0 5px 0 rgba(0,0,0,.18);}
+  .gol-tsi{width:100%;border:2px solid #000;border-top:none;border-radius:0 0 8px 8px;overflow:hidden;}
+  .gol-tsi .h{background:var(--amarelo);text-align:center;font-weight:800;font-size:12px;padding:3px;}
+  .gol-tsi .h.dark{background:#000;color:#fff;}
+  .gol-tsi .n{text-align:center;font-size:12px;padding:5px;border-top:1px solid #ddd;min-height:24px;outline:none;}
+  .gol-tsi .n:focus{background:#fffbcc;}
+
+  .doca{position:relative;border:1.8px solid #000;border-radius:6px;background:#fff;min-height:58px;}
+  .doca.off{opacity:.35;}
+  .doca .dh{background:#000;color:#fff;text-align:center;font-weight:800;font-size:13px;padding:2px;border-radius:4px 4px 0 0;}
+  .doca .dh.dest{background:var(--amarelo);color:#000;}
+  .row{display:flex;align-items:stretch;border-top:1px solid #e3e3e3;}
+  .row .tag{font-size:9px;font-weight:800;text-transform:uppercase;display:flex;align-items:center;justify-content:center;width:46px;flex-shrink:0;}
+  .row .tag.pesca{background:var(--amarelo);color:#000;}
+  .row .tag.sort{background:#000;color:#fff;}
+  .row .n{flex:1;padding:4px 7px;font-size:12px;outline:none;min-height:22px;}
+  .row .n:empty:before{content:'—';color:#c4c4c4;}
+  .row .n:focus{background:#fffbcc;}
+  .doca:before{content:'';position:absolute;top:50%;width:24px;height:3px;background:#000;transform:translateY(-50%);}
+  .doca:after{content:'';position:absolute;top:50%;border:7px solid transparent;transform:translateY(-50%);}
+  .col-left .doca:before{right:-24px;} .col-left .doca:after{right:-30px;border-left-color:#000;}
+  .col-right .doca:before{left:-24px;} .col-right .doca:after{left:-30px;border-right-color:#000;}
+
+  .zonas{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+  .zona{border:1.8px solid #000;border-radius:6px;min-width:190px;flex:1;}
+  .zona .zh{background:#000;color:#fff;text-align:center;font-weight:800;font-size:12px;padding:4px;}
+  .zona .zh.am{background:var(--amarelo);color:#000;}
+  .zona .zn{padding:5px 8px;font-size:12px;border-top:1px solid #e3e3e3;outline:none;min-height:24px;}
+  .zona .zn:focus{background:#fffbcc;}
+  .zona .zn:empty:before{content:'—';color:#c4c4c4;}
+
+  /* ===== VOLUMOSO ===== */
+  .volbox{border:2px solid #000;margin-top:18px;}
+  .volbox .vtit{background:var(--amarelo);text-align:center;font-weight:800;font-size:18px;letter-spacing:1px;padding:6px;border-bottom:2px solid #000;}
+  .volgrid{display:grid;grid-template-columns:repeat(6,1fr);}
+  .volgrid>div{border-right:1px solid #000;border-bottom:1px solid #000;font-size:11.5px;padding:5px 6px;text-align:center;min-height:26px;display:flex;align-items:center;justify-content:center;}
+  .volgrid>div:nth-child(6n){border-right:none;}
+  .volgrid .vh{background:#000;color:#fff;font-weight:800;text-transform:uppercase;font-size:10.5px;letter-spacing:.3px;}
+  .volgrid .vlbl{background:#000;color:#fff;font-weight:800;font-size:11px;}
+  .volgrid .vy{background:var(--amarelo);outline:none;}
+  .volgrid .vw{background:#fff;outline:none;}
+  .volgrid .vy:focus,.volgrid .vw:focus{background:#fffbcc;}
+  .volgrid .vy:empty:before,.volgrid .vw:empty:before{content:'—';color:#c4c4c4;}
+
+  /* ===== PAINEL REGRAS ===== */
+  .painel{max-width:1000px;margin:0 auto 18px;background:#fff;padding:22px;border-radius:0 8px 8px 8px;box-shadow:0 6px 24px rgba(0,0,0,.18);}
+  .painel h2{margin:0 0 4px;font-size:18px;}
+  .painel p.sub{margin:0 0 18px;color:#666;font-size:13px;}
+  .sec{border:1.5px solid #e0e0e0;border-radius:10px;padding:14px 16px;margin-bottom:16px;}
+  .sec h3{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px;}
+  .sec h3 .num{background:var(--preto);color:var(--amarelo);width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;}
+  textarea{width:100%;min-height:130px;font-family:inherit;font-size:13px;padding:10px;border:1.5px solid #cfcfcf;border-radius:8px;resize:vertical;}
+  .linha-btn{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;}
+  .cont{font-size:12px;color:#666;}
+  .radios{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;}
+  .radios label{display:flex;align-items:center;gap:6px;cursor:pointer;}
+  .prio{list-style:none;margin:0;padding:0;}
+  .prio li{display:flex;align-items:center;gap:10px;border:1.5px solid #e0e0e0;border-radius:8px;padding:8px 10px;margin-bottom:6px;background:#fafafa;font-size:13px;font-weight:600;}
+  .prio li .ord{background:var(--amarelo);width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;}
+  .prio li .mv{margin-left:auto;display:flex;gap:4px;}
+  .prio li .mv button{border:1px solid #ccc;background:#fff;border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:13px;}
+  .toggles{display:flex;flex-wrap:wrap;gap:6px;}
+  .tg{border:1.5px solid #bbb;background:#f3f3f3;color:#888;border-radius:6px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;user-select:none;}
+  .tg.on{background:var(--amarelo);border-color:#000;color:#000;}
+  .grp-label{font-size:11px;font-weight:800;color:#444;text-transform:uppercase;margin:8px 0 4px;letter-spacing:.5px;}
+  .opt{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;}
+  .resultado{margin-top:14px;padding:12px 14px;border-radius:8px;background:#f5f9f5;border:1.5px solid #cfe3cf;font-size:13px;display:none;}
+  .resultado.show{display:block;}
+  .resultado.warn{background:#fff8ec;border-color:#f0d9a8;}
+  .resultado b{font-size:14px;}
+  .resultado .sobra{margin-top:8px;color:#a15c00;}
+  .qtd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+  .qtd-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1.5px solid #e0e0e0;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;background:#fafafa;}
+  .qtd-item input{width:64px;padding:6px;border:1.5px solid #cfcfcf;border-radius:6px;font-size:14px;text-align:center;}
+
+  body.exporting .row .n:empty:before,body.exporting .zona .zn:empty:before,body.exporting .bancada .bn:empty:before,body.exporting .abast-row .an:empty:before,body.exporting .volgrid .vy:empty:before,body.exporting .volgrid .vw:empty:before{content:'';}
+  body.exporting .n:focus,body.exporting .zn:focus,body.exporting .bn:focus{background:transparent;}
+  body.exporting .no-print{display:none!important;}
+
+  @media print{
+    @page{size:A4 landscape;margin:6mm;}
+    body{background:#fff;}
+    .toolbar,.tabs,#view-regras,.no-print{display:none!important;}
+    .folha{box-shadow:none;margin:0;max-width:none;border-radius:0;padding:0;}
+    .row .n:empty:before,.zona .zn:empty:before,.bancada .bn:empty:before,.abast-row .an:empty:before,.volgrid .vy:empty:before,.volgrid .vw:empty:before{content:'';}
+    .n:focus,.zn:focus,.bn:focus{background:transparent;}
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="brand">PLANTA BAIXA — SORTING <small>· SSP23</small></div>
+  <div class="spacer"></div>
+  <span class="status" id="status"></span>
+  <button class="btn" id="btnPdf" onclick="gerarPDF()">📄 Gerar PDF</button>
+  <button class="btn ghost" onclick="showTab('planta');window.print()">🖨️ Imprimir</button>
+  <button class="btn ghost" onclick="exportar()">⬇ Exportar</button>
+  <button class="btn ghost" onclick="document.getElementById('imp').click()">⬆ Importar</button>
+  <input type="file" id="imp" accept=".json" style="display:none" onchange="importar(event)">
+  <button class="btn ghost" onclick="limpar()">🧹 Limpar nomes</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-regras" onclick="showTab('regras')">⚙️ Regras / Auto-preencher</button>
+  <button class="tab" id="tab-planta" onclick="showTab('planta')">📐 Planta</button>
+</div>
+
+<!-- ===================== VIEW: PLANTA ===================== -->
+<div id="view-planta">
+<div class="folha">
+  <div class="titulo">
+    <div class="lbl">LAYOUT FÍSICO</div>
+    <div class="main">SORTING · OPERAÇÃO SUZANO SSP23</div>
+  </div>
+
+  <div class="legenda">
+    <div class="it"><span class="chip bip"></span> Bancada de bipagem</div>
+    <div class="it"><span class="chip est"></span> Esteira (fluxo do pacote)</div>
+    <div class="it"><span class="chip doca"></span> Doca de sorting</div>
+    <div class="it"><span class="chip pesca"></span> Pesca</div>
+    <div class="it"><span class="chip sort"></span> Sorting</div>
+    <div class="it">↓ sentido do fluxo</div>
+    <button class="btn ghost no-print" style="margin-left:auto" onclick="limpar()">🧹 Limpar todos os nomes</button>
+  </div>
+
+  <!-- Responsável pelo abastecimento (acima da bipagem) -->
+  <div class="abast-top">
+    <div class="abast-h">RESPONSÁVEL ABASTECIMENTO</div>
+    <div class="abast-row" id="abastRow"></div>
+  </div>
+
+  <div class="inducao">
+    <div class="bh">📷 ÁREA DE BIPAGEM / INDUÇÃO</div>
+    <div class="nivel">
+      <div class="side left">
+        <div class="bancada" data-bn="B1"><div class="bt">Bancada 1</div>
+          <div class="brow"><span class="btag bip">Bipagem</span><div class="bn" data-k data-area="bip" data-grp="B1"></div></div>
+          <div class="brow"><span class="btag etq">Etiquetagem</span><div class="bn" data-k data-area="etq" data-grp="B1"></div></div></div>
+        <span class="conn">▶</span>
+      </div>
+      <div class="beltseg"><span class="seta">▼</span></div>
+      <div class="side right">
+        <span class="conn">◀</span>
+        <div class="bancada" data-bn="B3"><div class="bt">Bancada 3</div>
+          <div class="brow"><span class="btag bip">Bipagem</span><div class="bn" data-k data-area="bip" data-grp="B3"></div></div>
+          <div class="brow"><span class="btag etq">Etiquetagem</span><div class="bn" data-k data-area="etq" data-grp="B3"></div></div></div>
+      </div>
+    </div>
+    <div class="nivel">
+      <div class="side left">
+        <div class="bancada" data-bn="B2"><div class="bt">Bancada 2</div>
+          <div class="brow"><span class="btag bip">Bipagem</span><div class="bn" data-k data-area="bip" data-grp="B2"></div></div>
+          <div class="brow"><span class="btag etq">Etiquetagem</span><div class="bn" data-k data-area="etq" data-grp="B2"></div></div></div>
+        <span class="conn">▶</span>
+      </div>
+      <div class="beltseg"><span class="seta">▼</span></div>
+      <div class="side right">
+        <span class="conn">◀</span>
+        <div class="bancada" data-bn="B4"><div class="bt">Bancada 4</div>
+          <div class="brow"><span class="btag bip">Bipagem</span><div class="bn" data-k data-area="bip" data-grp="B4"></div></div>
+          <div class="brow"><span class="btag etq">Etiquetagem</span><div class="bn" data-k data-area="etq" data-grp="B4"></div></div></div>
+      </div>
+    </div>
+    <div class="nivel">
+      <div class="side left">
+        <div class="bancada" data-bn="B5"><div class="bt">Bancada 5</div>
+          <div class="brow"><span class="btag bip">Bipagem</span><div class="bn" data-k data-area="bip" data-grp="B5"></div></div>
+          <div class="brow"><span class="btag etq">Etiquetagem</span><div class="bn" data-k data-area="etq" data-grp="B5"></div></div></div>
+        <span class="conn">▶</span>
+      </div>
+      <div class="beltseg"><span class="seta">▼</span></div>
+      <div class="side right"></div>
+    </div>
+    <div class="nivel">
+      <div class="side left">
+        <div class="bancada" data-bn="B6"><div class="bt">Bancada 6</div>
+          <div class="brow"><span class="btag bip">Bipagem</span><div class="bn" data-k data-area="bip" data-grp="B6"></div></div>
+          <div class="brow"><span class="btag etq">Etiquetagem</span><div class="bn" data-k data-area="etq" data-grp="B6"></div></div></div>
+        <span class="conn">▶</span>
+      </div>
+      <div class="beltseg"><span class="seta">▼</span></div>
+      <div class="side right"></div>
+    </div>
+  </div>
+
+  <div class="floor">
+    <div class="col col-left" id="colLeft"></div>
+    <div class="spine">
+      <div class="esteira"><span class="seta">▼</span><span class="vlabel">ESTEIRA</span><span class="seta">▼</span></div>
+      <div class="gol-tsi">
+        <div class="h">GOL</div>
+        <div class="n" data-k data-area="apoio">Juliana Damasco</div>
+        <div class="h dark">TSI</div>
+        <div class="n" data-k data-area="apoio"></div>
+        <div class="n" data-k data-area="apoio"></div>
+      </div>
+    </div>
+    <div class="col col-right" id="colRight"></div>
+  </div>
+
+  <div class="zonas" id="zonasDyn"></div>
+
+  <!-- ===== VOLUMOSO ===== -->
+  <div class="volbox">
+    <div class="vtit">VOLUMOSO</div>
+    <div class="volgrid">
+      <!-- cabeçalho -->
+      <div class="vh">Etiquetagem</div><div class="vh">Etiquetagem</div><div class="vh">Abastecimento</div>
+      <div class="vh">Guardar</div><div class="vh">Guardar Big</div><div class="vh">P.S Volumoso</div>
+      <!-- linha 1 -->
+      <div class="vy" data-k data-area="volumoso">Felipe Laes</div>
+      <div class="vy" data-k data-area="volumoso">Gabriel Eugenio</div>
+      <div class="vy" data-k data-area="volumoso">Polly</div>
+      <div class="vw" data-k data-area="volumoso">Igor de Souza</div>
+      <div class="vw" data-k data-area="volumoso">Henrique da Silva</div>
+      <div class="vy" data-k data-area="volumoso">Lyandra</div>
+      <!-- linha 2 -->
+      <div class="vlbl">5S</div><div class="vlbl">Carrinho</div><div class="vlbl">Abastecimento</div>
+      <div class="vw" data-k data-area="volumoso">Diogo Gomes</div>
+      <div class="vw" data-k data-area="volumoso">Lucas Barbosa</div>
+      <div class="vy" data-k data-area="volumoso">Marisa</div>
+      <!-- linha 3 -->
+      <div class="vy" data-k data-area="volumoso">Carlos A.</div>
+      <div class="vy" data-k data-area="volumoso">Polly</div>
+      <div class="vy" data-k data-area="volumoso">Polly</div>
+      <div class="vw" data-k data-area="volumoso">Paulo Vinicius</div>
+      <div class="vw" data-k data-area="volumoso">Thiago Stevao</div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <!-- linha 4 -->
+      <div class="vlbl">Responsável</div>
+      <div class="vw" data-k data-area="volumoso">Weller</div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <!-- linha 5 -->
+      <div class="vlbl">Responsável</div>
+      <div class="vw" data-k data-area="volumoso">Jeff</div>
+      <div class="vlbl">Stage</div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <!-- linha 6 -->
+      <div class="vlbl">Responsável</div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <div class="vw" data-k data-area="volumoso"></div>
+      <div class="vw" data-k data-area="volumoso"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== VIEW: REGRAS ===================== -->
+<div id="view-regras" class="hide">
+<div class="painel">
+  <h2>⚙️ Regras de auto-preenchimento</h2>
+  <p class="sub">Cole a <b>lista de nomes</b>, ajuste as regras se quiser, e clique em <b>Gerar Escala</b>: a ferramenta distribui os nomes nas bancadas e docas e leva pra planta.</p>
+
+  <div class="sec">
+    <h3><span class="num">1</span> Lista de nomes <span class="cont" id="contPessoas"></span></h3>
+    <textarea id="pessoas" placeholder="Cole aqui os nomes do dia — um por linha..."></textarea>
+    <div class="linha-btn">
+      <button class="btn big" onclick="distribuir()">▶ Gerar Escala</button>
+      <button class="btn ghost" onclick="puxarNomes()">↳ Puxar nomes da planta</button>
+      <button class="btn ghost" onclick="document.getElementById('pessoas').value='';contarPessoas();salvarRegras()">Limpar lista</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="num">2</span> Ordem de distribuição</h3>
+    <div class="radios">
+      <label><input type="radio" name="ordem" value="lista" checked> Seguir a ordem da lista</label>
+      <label><input type="radio" name="ordem" value="alfa"> Ordem alfabética</label>
+      <label><input type="radio" name="ordem" value="rand"> Aleatória (sortear)</label>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="num">3</span> Prioridade de preenchimento</h3>
+    <p class="cont" style="margin:0 0 10px">As pessoas são alocadas de cima para baixo. Quando faltar gente, as posições do fim da lista ficam vazias.</p>
+    <ul class="prio" id="prio"></ul>
+  </div>
+
+  <div class="sec">
+    <h3><span class="num">4</span> Posições ativas</h3>
+    <div class="grp-label">Bancadas</div>
+    <div class="toggles" id="tgBancadas"></div>
+    <div class="grp-label">Docas</div>
+    <div class="toggles" id="tgDocas"></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="num">5</span> Opções</h3>
+    <div class="opt"><input type="checkbox" id="optLock" checked> <label for="optLock">Não substituir nomes já escritos na planta (só preenche os vazios e não repete esses nomes em outra área)</label></div>
+    <div class="opt"><input type="checkbox" id="optApoio"> <label for="optApoio">Incluir zonas de apoio (Sacas, Caça, GOL, TSI, Expedição) na distribuição</label></div>
+    <div class="opt"><input type="checkbox" id="optVolumoso"> <label for="optVolumoso">Incluir o bloco Volumoso na distribuição</label></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="num">6</span> Equilibrar a sobra</h3>
+    <p class="cont" style="margin:0 0 10px">Quem sobrar depois de preencher as posições é distribuído de forma <b>balanceada</b> entre as áreas marcadas (a com menos gente recebe primeiro). Cada vaga pode receber mais de um nome.</p>
+    <div class="radios">
+      <label><input type="checkbox" id="eqSort" checked> Sorting (docas)</label>
+      <label><input type="checkbox" id="eqVol" checked> Volumoso</label>
+      <label><input type="checkbox" id="eqSacas" checked> Sacas</label>
+    </div>
+    <div class="opt" style="margin-top:10px">Máx. de nomes por vaga no Sorting:
+      <input type="number" id="maxSort" value="3" min="1" max="10" style="width:60px;padding:5px;border:1.5px solid #cfcfcf;border-radius:6px;margin-left:6px">
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="num">7</span> Quantidade de pessoas por área</h3>
+    <p class="cont" style="margin:0 0 10px">Defina quantos campos cada área terá na planta. Os nomes já preenchidos são mantidos ao mudar a quantidade.</p>
+    <div class="qtd-grid" id="qtdGrid"></div>
+  </div>
+
+  <div class="linha-btn">
+    <button class="btn big" onclick="distribuir()">▶ Gerar Escala</button>
+    <button class="btn ghost" onclick="limparDistribuicao()">Limpar posições ativas</button>
+  </div>
+
+  <div class="resultado" id="resultado"></div>
+</div>
+</div>
+
+<script>
+/* ===== Docas ===== */
+const docasEsq = [
+  {c:'M', dest:false, ativa:true, pesca:'Jenifer da Silva', sort:'Caroline das Neves'},
+  {c:'N', dest:false, ativa:true, pesca:'Camily Patricio', sort:'Denise Cristina'},
+  {c:'P', dest:false, ativa:true, pesca:'', sort:''},
+  {c:'S_AM999', dest:true, ativa:false, pesca:'', sort:''},
+  {c:'T_AM999', dest:true, ativa:false, pesca:'', sort:''},
+  {c:'Extra', dest:false, ativa:false, pesca:'', sort:''},
+];
+const docasDir = [
+  {c:'A', ativa:true, pesca:'Patrick', sort:'Aline Cardoso de França'},
+  {c:'B', ativa:true, pesca:'Renan', sort:'Cintia Pereira / Jeferson S.'},
+  {c:'C', ativa:true, pesca:'Patricia Carvalho', sort:'Juliana de Fatima / Liliane'},
+  {c:'D', ativa:true, pesca:'Lais Pinho', sort:'Michel Ricardo'},
+  {c:'F', ativa:true, pesca:'Karolayne', sort:'Aline Lopes / Daniel Vitor'},
+  {c:'G', ativa:true, pesca:'Bianca da Silva', sort:'Caroline de Lima / Vinicius da Silva'},
+  {c:'H', ativa:true, pesca:'Juliana Gomes', sort:'Guilherme Andrade'},
+  {c:'I', ativa:true, pesca:'Michele Santos', sort:'Juliana de Souza / Aline Alvez'},
+  {c:'J', ativa:true, pesca:'Patricia Lira', sort:'Juhlia Oliveira / Anderson'},
+  {c:'K', ativa:true, pesca:'Bruna Ramalho', sort:'Pedro Enrique'},
+  {c:'L', ativa:true, pesca:'Carla Costa', sort:'Denise da Silva / Rayssa Bezerra'},
+];
+function renderDocas(arr, elId){
+  const wrap=document.getElementById(elId);
+  arr.forEach(d=>{
+    const el=document.createElement('div'); el.className='doca'; el.dataset.doca=d.c;
+    el.innerHTML=`<div class="dh ${d.dest?'dest':''}">${d.c}</div>
+      <div class="row"><div class="tag pesca">Pesca</div><div class="n" data-k data-area="pesca" data-grp="${d.c}" contenteditable="true">${d.pesca}</div></div>
+      <div class="row"><div class="tag sort">Sort</div><div class="n" data-k data-area="sort" data-grp="${d.c}" contenteditable="true">${d.sort}</div></div>`;
+    wrap.appendChild(el);
+  });
+}
+renderDocas(docasEsq,'colLeft');
+renderDocas(docasDir,'colRight');
+const todasDocas=[...docasEsq,...docasDir];
+const bancadasIds=['B1','B2','B3','B4','B5','B6'];
+
+/* ===== Zonas com quantidade configurável ===== */
+const RKEY='planta_sorting_regras_v2';
+const ZCONF={
+  abast:{label:'RESPONSÁVEL ABASTECIMENTO', qtd:4, seed:[]},
+  resp:{label:'Responsável Sorting', qtd:2, am:true, seed:['Silas','Rafa']},
+  tps:{label:'Tratar PS', qtd:1, am:false, seed:['Neia']},
+  sacas:{label:'Sacas', qtd:5, am:true, zona:'sacas', seed:['Andreza','Janine','Adriana','Maria Aparecida','Angélica Soares']},
+  caca:{label:'Caça', qtd:1, am:false, seed:['Scarlet']},
+  exp:{label:'Expedição AM001', qtd:3, am:true, seed:[]},
+};
+const zonasOrdem=['resp','tps','sacas','caca','exp'];
+const qtdLabels={abast:'Resp. Abastecimento',resp:'Responsável Sorting',tps:'Tratar PS',sacas:'Sacas',caca:'Caça',exp:'Expedição AM001'};
+// carrega quantidades salvas antes de renderizar
+(function(){ try{ const r=JSON.parse(localStorage.getItem(RKEY)); if(r&&r.qtd) Object.keys(r.qtd).forEach(k=>{ if(ZCONF[k]&&r.qtd[k]!=null) ZCONF[k].qtd=r.qtd[k]; }); }catch(e){} })();
+
+function renderAbast(){ const c=ZCONF.abast; let h='';
+  for(let i=0;i<c.qtd;i++) h+=`<div class="an" data-k="abast${i}" contenteditable="true">${c.seed[i]||''}</div>`;
+  document.getElementById('abastRow').innerHTML=h; }
+function renderZonas(){ let h='';
+  zonasOrdem.forEach(k=>{ const c=ZCONF[k]; let cl='';
+    for(let i=0;i<c.qtd;i++){ const z=c.zona?` data-zona="${c.zona}"`:''; cl+=`<div class="zn" data-k="${k}${i}" data-area="apoio"${z} contenteditable="true">${c.seed[i]||''}</div>`; }
+    h+=`<div class="zona"><div class="zh ${c.am?'am':''}">${c.label}</div>${cl}</div>`; });
+  document.getElementById('zonasDyn').innerHTML=h; }
+renderAbast(); renderZonas();
+
+function renderQtdGrid(){ const g=document.getElementById('qtdGrid'); g.innerHTML='';
+  ['abast',...zonasOrdem].forEach(k=>{ const d=document.createElement('div'); d.className='qtd-item';
+    d.innerHTML=`<span>${qtdLabels[k]}</span><input type="number" min="0" max="30" value="${ZCONF[k].qtd}">`;
+    d.querySelector('input').addEventListener('change',e=>setQtd(k,e.target.value));
+    g.appendChild(d); }); }
+
+function setQtd(key,val){ val=Math.max(0,Math.min(30,parseInt(val)||0));
+  salvar();                       // guarda valores atuais por chave
+  ZCONF[key].qtd=val;
+  if(key==='abast') renderAbast(); else renderZonas();
+  indexar(); carregar();          // recria campos e restaura nomes salvos
+  salvarRegras(); setStatus('✓ quantidade ajustada'); }
+
+/* ===== Células editáveis + salvar ===== */
+let cells=[];
+function indexar(){ cells=Array.from(document.querySelectorAll('[data-k]')); let i=0;
+  cells.forEach(c=>{ c.setAttribute('contenteditable','true');
+    if(!c.getAttribute('data-k')) c.setAttribute('data-k','c'+(i++));
+    if(!c.__b){ c.addEventListener('input',agendar); c.__b=1; } }); }
+indexar();
+
+const KEY='planta_sorting_ssp23_v8';
+let t=null; function agendar(){ clearTimeout(t); t=setTimeout(salvar,400); }
+function coletar(){ const o={cells:{}}; cells.forEach(c=>o.cells[c.dataset.k]=c.innerText.trim()); return o; }
+function salvar(){ try{ localStorage.setItem(KEY,JSON.stringify(coletar())); setStatus('✓ salvo automaticamente'); }catch(e){ setStatus('⚠ não salvou'); } }
+function aplicar(d){ if(d&&d.cells) cells.forEach(c=>{ if(d.cells[c.dataset.k]!=null) c.innerText=d.cells[c.dataset.k]; }); }
+function carregar(){ try{ aplicar(JSON.parse(localStorage.getItem(KEY))); }catch(e){} }
+carregar();
+Object.values(ZCONF).forEach(z=>z.seed=[]);  // após 1ª carga, valores vêm do save
+
+(function(){ const segs=document.querySelectorAll('.beltseg');
+  [0,1].forEach(i=>{ if(segs[i]){ const p=document.createElement('div'); p.className='pacote'; segs[i].insertBefore(p,segs[i].firstChild);} });
+  const est=document.querySelector('.esteira'); if(est){ const p=document.createElement('div'); p.className='pacote'; est.insertBefore(p,est.children[1]); } })();
+
+let st=null; function setStatus(x){ const s=document.getElementById('status'); s.textContent=x; clearTimeout(st); st=setTimeout(()=>s.textContent='',2500); }
+
+/* ===== Abas ===== */
+function showTab(t){
+  document.getElementById('view-planta').classList.toggle('hide',t!=='planta');
+  document.getElementById('view-regras').classList.toggle('hide',t!=='regras');
+  document.getElementById('tab-planta').classList.toggle('active',t==='planta');
+  document.getElementById('tab-regras').classList.toggle('active',t==='regras');
+}
+
+/* ===== Export/Import/Print/PDF ===== */
+function exportar(){ const b=new Blob([JSON.stringify(coletar(),null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='planta_sorting_ssp23.json'; a.click(); }
+function importar(ev){ const f=ev.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ try{ aplicar(JSON.parse(r.target.result)); salvar(); setStatus('✓ importado'); }catch(e){ setStatus('⚠ inválido'); } }; r.readAsText(f); ev.target.value=''; }
+function limpar(){ if(!confirm('Limpar todos os nomes? (a planta é mantida)'))return; cells.forEach(c=>c.innerText=''); salvar(); setStatus('✓ limpo'); }
+
+async function gerarPDF(){
+  showTab('planta');
+  const btn=document.getElementById('btnPdf');
+  if(!window.html2canvas || !(window.jspdf && window.jspdf.jsPDF)){ alert('Não consegui carregar as bibliotecas de PDF (precisa de internet). Usando a impressão — escolha "Salvar como PDF".'); window.print(); return; }
+  const txtOrig=btn.textContent; btn.textContent='⏳ Gerando...'; btn.disabled=true; document.body.classList.add('exporting');
+  try{
+    const alvo=document.querySelector('.folha');
+    const canvas=await html2canvas(alvo,{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:alvo.scrollWidth});
+    const {jsPDF}=window.jspdf; const pdf=new jsPDF('l','mm','a4');
+    const pageW=pdf.internal.pageSize.getWidth(), pageH=pdf.internal.pageSize.getHeight(), margin=6;
+    const imgW=pageW-margin*2, imgH=canvas.height*imgW/canvas.width, img=canvas.toDataURL('image/jpeg',0.92);
+    let heightLeft=imgH, pos=margin;
+    pdf.addImage(img,'JPEG',margin,pos,imgW,imgH); heightLeft-=(pageH-margin*2);
+    while(heightLeft>0){ pos=margin-(imgH-heightLeft); pdf.addPage(); pdf.addImage(img,'JPEG',margin,pos,imgW,imgH); heightLeft-=(pageH-margin*2); }
+    pdf.save('planta_sorting_ssp23.pdf'); setStatus('✓ PDF gerado');
+  }catch(e){ console.error(e); alert('Erro ao gerar PDF. Abrindo a impressão.'); window.print(); }
+  finally{ document.body.classList.remove('exporting'); btn.textContent=txtOrig; btn.disabled=false; }
+}
+
+/* ===================== MOTOR DE REGRAS ===================== */
+const ativo={};  // grupos ativos (bancadas + docas)
+bancadasIds.forEach(b=>ativo[b]=true);
+todasDocas.forEach(d=>ativo[d.c]=d.ativa);
+
+let prioridade=[
+  {k:'bip',  label:'Bancadas — Bipagem'},
+  {k:'etq',  label:'Bancadas — Etiquetagem'},
+  {k:'pesca',label:'Docas — Pesca'},
+  {k:'sort', label:'Docas — Sorting'},
+];
+
+function renderPrio(){
+  const ul=document.getElementById('prio'); ul.innerHTML='';
+  prioridade.forEach((p,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="ord">${i+1}</span> ${p.label}
+      <span class="mv"><button onclick="moverPrio(${i},-1)">↑</button><button onclick="moverPrio(${i},1)">↓</button></span>`;
+    ul.appendChild(li);
+  });
+}
+function moverPrio(i,dir){ const j=i+dir; if(j<0||j>=prioridade.length)return;
+  [prioridade[i],prioridade[j]]=[prioridade[j],prioridade[i]]; renderPrio(); salvarRegras(); }
+renderPrio();
+
+function renderToggles(){
+  const tb=document.getElementById('tgBancadas'); tb.innerHTML='';
+  bancadasIds.forEach(b=>{ const el=document.createElement('span'); el.className='tg'+(ativo[b]?' on':''); el.textContent=b.replace('B','Bancada ');
+    el.onclick=()=>{ativo[b]=!ativo[b]; el.classList.toggle('on'); salvarRegras();}; tb.appendChild(el); });
+  const td=document.getElementById('tgDocas'); td.innerHTML='';
+  todasDocas.forEach(d=>{ const el=document.createElement('span'); el.className='tg'+(ativo[d.c]?' on':''); el.textContent=d.c;
+    el.onclick=()=>{ativo[d.c]=!ativo[d.c]; el.classList.toggle('on'); refletirDocaInativa(); salvarRegras();}; td.appendChild(el); });
+  refletirDocaInativa();
+}
+function refletirDocaInativa(){ document.querySelectorAll('.doca').forEach(el=>{ el.classList.toggle('off', !ativo[el.dataset.doca]); }); }
+renderToggles();
+
+function contarPessoas(){ const n=parsePessoas().length; document.getElementById('contPessoas').textContent='('+n+' pessoas)'; }
+function parsePessoas(){ return document.getElementById('pessoas').value.split('\n').map(s=>s.trim()).filter(Boolean); }
+document.getElementById('pessoas').addEventListener('input',()=>{contarPessoas();salvarRegras();});
+
+function puxarNomes(){ const vals=[]; document.querySelectorAll('[data-area]').forEach(c=>{const v=c.innerText.trim(); if(v)vals.push(v);});
+  document.getElementById('pessoas').value=vals.join('\n'); contarPessoas(); salvarRegras(); setStatus('✓ nomes puxados'); }
+
+function slotsDe(area){
+  return Array.from(document.querySelectorAll(`[data-area="${area}"]`)).filter(c=>{
+    if(area==='apoio') return document.getElementById('optApoio').checked;
+    if(area==='volumoso') return document.getElementById('optVolumoso').checked;
+    return ativo[c.dataset.grp];
+  });
+}
+function ordenar(arr){ const m=document.querySelector('input[name=ordem]:checked').value;
+  if(m==='alfa') return [...arr].sort((a,b)=>a.localeCompare(b,'pt'));
+  if(m==='rand'){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+  return arr; }
+
+/* absorvedores da sobra */
+const absorvedores={
+  sort:()=>Array.from(document.querySelectorAll('[data-area="sort"]')).filter(c=>ativo[c.dataset.grp]),
+  volumoso:()=>Array.from(document.querySelectorAll('[data-area="volumoso"]')),
+  sacas:()=>Array.from(document.querySelectorAll('[data-zona="sacas"]')),
+};
+function nNomes(c){ const t=c.innerText.trim(); return t? t.split('/').filter(s=>s.trim()).length : 0; }
+function norm(s){ return (s||'').trim().toLowerCase(); }
+function equilibrar(sobra, colocados){
+  colocados = colocados || new Set();
+  const sel=[];
+  if(document.getElementById('eqSort').checked) sel.push('sort');
+  if(document.getElementById('eqVol').checked) sel.push('volumoso');
+  if(document.getElementById('eqSacas').checked) sel.push('sacas');
+  const capSort=parseInt(document.getElementById('maxSort').value)||3;
+  const caps={sort:capSort, volumoso:Infinity, sacas:Infinity};
+  let areas=sel.map(k=>({k,cells:absorvedores[k]()})).filter(a=>a.cells.length>0);
+  if(!areas.length) return {restante:sobra, areas:[], usados:{}};
+  const usados={}; sel.forEach(k=>usados[k]=0);
+  let i=0; const restante=[];
+  for(const pessoa of sobra){
+    if(colocados.has(norm(pessoa))) continue;       // já está na planta, não repete
+    let colocou=false;
+    for(let tries=0; tries<areas.length; tries++){
+      const a=areas[i%areas.length]; i++;
+      const disp=a.cells.filter(c=>nNomes(c)<caps[a.k]);
+      if(disp.length){
+        disp.sort((x,y)=>nNomes(x)-nNomes(y));
+        const cell=disp[0]; const cur=cell.innerText.trim();
+        cell.innerText = cur? (cur+' / '+pessoa) : pessoa;
+        usados[a.k]++; colocados.add(norm(pessoa)); colocou=true; break;
+      }
+    }
+    if(!colocou) restante.push(pessoa);
+  }
+  return {restante, areas:sel, usados};
+}
+
+function distribuir(){
+  const listaOrig=parsePessoas();
+  let pessoas=ordenar(listaOrig);
+  // remove duplicados da própria lista (mantém a 1ª ocorrência)
+  const vistos=new Set();
+  pessoas=pessoas.filter(n=>{ const k=norm(n); if(!k||vistos.has(k))return false; vistos.add(k); return true; });
+  const dupLista=listaOrig.filter(n=>n.trim()).length - pessoas.length;
+
+  const lock=document.getElementById('optLock').checked;
+  let slots=[];
+  prioridade.forEach(p=>{ slots=slots.concat(slotsDe(p.k)); });
+  if(document.getElementById('optApoio').checked) slots=slots.concat(slotsDe('apoio'));
+  if(document.getElementById('optVolumoso').checked) slots=slots.concat(slotsDe('volumoso'));
+  if(!lock){
+    slots.forEach(s=>s.innerText='');
+    if(document.getElementById('eqSort').checked) absorvedores.sort().forEach(c=>c.innerText='');
+    if(document.getElementById('eqVol').checked) absorvedores.volumoso().forEach(c=>c.innerText='');
+    if(document.getElementById('eqSacas').checked) absorvedores.sacas().forEach(c=>c.innerText='');
+  }
+
+  // nomes que JÁ estão na planta (manuais/preservados) — não podem ser substituídos nem repetidos
+  const colocados=new Set();
+  cells.forEach(c=>{ c.innerText.split('/').forEach(n=>{ const k=norm(n); if(k) colocados.add(k); }); });
+  // tira da lista quem já está na planta (evita repetir o mesmo nome em outra área)
+  const antes=pessoas.length;
+  pessoas=pessoas.filter(n=>!colocados.has(norm(n)));
+  const jaNaPlanta=antes-pessoas.length;
+
+  // preenche só as vagas vazias (nunca sobrescreve o que está escrito)
+  let usadas=0;
+  for(const s of slots){
+    if(s.innerText.trim()!=='') continue;
+    if(usadas>=pessoas.length) break;
+    const nome=pessoas[usadas++]; s.innerText=nome; colocados.add(norm(nome));
+  }
+  const sobra=pessoas.slice(usadas);
+  const vazias=slots.filter(s=>s.innerText.trim()==='').length;
+  let eqInfo={restante:sobra, areas:[], usados:{}};
+  if(sobra.length) eqInfo=equilibrar(sobra, colocados);
+  salvar();
+
+  const rest=eqInfo.restante;
+  const r=document.getElementById('resultado'); r.className='resultado show'+((rest.length||vazias)?' warn':'');
+  let html=`<b>✓ Distribuição concluída</b><br>${usadas} pessoa(s) nas posições · ${slots.length} posições · ${vazias} vazia(s)`;
+  if(jaNaPlanta) html+=`<div class="sobra" style="color:#1c7a1c">✓ ${jaNaPlanta} nome(s) da lista já estavam na planta — mantidos, sem repetir.</div>`;
+  if(dupLista) html+=`<div class="sobra">ℹ ${dupLista} nome(s) repetido(s) na lista foram ignorados.</div>`;
+  if(!sobra.length && !rest.length) html+=`<div class="sobra" style="color:#1c7a1c">✓ Todos couberam — sem excedente.</div>`;
+  if(sobra.length && eqInfo.areas.length){
+    const nomesArea={sort:'Sorting',volumoso:'Volumoso',sacas:'Sacas'};
+    const det=eqInfo.areas.map(a=>`${nomesArea[a]}: ${eqInfo.usados[a]||0}`).join(' · ');
+    html+=`<div class="sobra" style="color:#1c7a1c">↻ ${sobra.length-rest.length} excedente(s) equilibrado(s) → ${det}</div>`;
+  }
+  if(rest.length) html+=`<div class="sobra">⚠ ${rest.length} sem vaga (áreas no teto): ${rest.join(', ')}</div>`;
+  if(sobra.length && !eqInfo.areas.length) html+=`<div class="sobra">⚠ ${sobra.length} sobraram — marque uma área em "Equilibrar a sobra": ${sobra.join(', ')}</div>`;
+  if(vazias && !sobra.length) html+=`<div class="sobra">⚠ Faltou gente para ${vazias} posição(ões).</div>`;
+  r.innerHTML=html;
+  setStatus('✓ distribuído'); showTab('planta');
+}
+function limparDistribuicao(){
+  if(!confirm('Limpar os nomes das posições ATIVAS (bancadas e docas marcadas)?'))return;
+  let slots=[].concat(slotsDe('bip'),slotsDe('etq'),slotsDe('pesca'),slotsDe('sort'));
+  if(document.getElementById('optApoio').checked) slots=slots.concat(slotsDe('apoio'));
+  if(document.getElementById('optVolumoso').checked) slots=slots.concat(slotsDe('volumoso'));
+  slots.forEach(s=>s.innerText=''); salvar(); setStatus('✓ posições limpas');
+}
+
+/* ===== Salvar config das regras ===== */
+function salvarRegras(){ try{ localStorage.setItem(RKEY,JSON.stringify({
+  pessoas:document.getElementById('pessoas').value,
+  ativo, prioridade:prioridade.map(p=>p.k),
+  ordem:document.querySelector('input[name=ordem]:checked').value,
+  lock:document.getElementById('optLock').checked, apoio:document.getElementById('optApoio').checked,
+  volumoso:document.getElementById('optVolumoso').checked,
+  eq:{sort:document.getElementById('eqSort').checked,vol:document.getElementById('eqVol').checked,sacas:document.getElementById('eqSacas').checked,max:document.getElementById('maxSort').value},
+  qtd:Object.fromEntries(Object.keys(ZCONF).map(k=>[k,ZCONF[k].qtd]))
+}));}catch(e){} }
+function carregarRegras(){ try{ const d=JSON.parse(localStorage.getItem(RKEY)); if(!d)return;
+  if(d.pessoas!=null) document.getElementById('pessoas').value=d.pessoas;
+  if(d.ativo) Object.assign(ativo,d.ativo);
+  if(d.prioridade){ const map={bip:'Bancadas — Bipagem',etq:'Bancadas — Etiquetagem',pesca:'Docas — Pesca',sort:'Docas — Sorting'};
+    prioridade=d.prioridade.filter(k=>map[k]).map(k=>({k,label:map[k]})); }
+  if(d.ordem){ const el=document.querySelector(`input[name=ordem][value="${d.ordem}"]`); if(el)el.checked=true; }
+  if(d.lock!=null) document.getElementById('optLock').checked=d.lock;
+  if(d.apoio!=null) document.getElementById('optApoio').checked=d.apoio;
+  if(d.volumoso!=null) document.getElementById('optVolumoso').checked=d.volumoso;
+  if(d.eq){ document.getElementById('eqSort').checked=!!d.eq.sort; document.getElementById('eqVol').checked=!!d.eq.vol; document.getElementById('eqSacas').checked=!!d.eq.sacas; if(d.eq.max) document.getElementById('maxSort').value=d.eq.max; }
+}catch(e){} }
+carregarRegras(); renderPrio(); renderToggles(); renderQtdGrid(); contarPessoas();
+showTab('regras');
+['optLock','optApoio','optVolumoso','eqSort','eqVol','eqSacas','maxSort'].forEach(id=>document.getElementById(id).addEventListener('change',salvarRegras));
+document.querySelectorAll('input[name=ordem]').forEach(r=>r.addEventListener('change',salvarRegras));
+</script>
+</body>
+</html>
