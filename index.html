@@ -125,6 +125,14 @@
   .volgrid .vw{background:#fff;outline:none;}
   .volgrid .vy:focus,.volgrid .vw:focus{background:#fffbcc;}
   .volgrid .vy:empty:before,.volgrid .vw:empty:before{content:'—';color:#c4c4c4;}
+  /* volumoso dinâmico (cards por área) */
+  .volcols{display:flex;flex-wrap:wrap;gap:8px;padding:10px;}
+  .volcard{border:1.5px solid #000;border-radius:6px;flex:1;min-width:150px;overflow:hidden;}
+  .volcard .vch{background:#000;color:#fff;text-align:center;font-weight:800;font-size:11px;padding:5px 4px;text-transform:uppercase;letter-spacing:.3px;}
+  .volcard .vch.am{background:var(--amarelo);color:#000;}
+  .volcard .vcell{font-size:12px;padding:5px 6px;border-top:1px solid #e3e3e3;outline:none;min-height:24px;text-align:center;}
+  .volcard .vcell:focus{background:#fffbcc;}
+  .volcard .vcell:empty:before{content:'—';color:#c4c4c4;}
 
   /* ===== PAINEL REGRAS ===== */
   .painel{max-width:1000px;margin:0 auto 18px;background:#fff;padding:22px;border-radius:0 8px 8px 8px;box-shadow:0 6px 24px rgba(0,0,0,.18);}
@@ -157,7 +165,7 @@
   .qtd-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1.5px solid #e0e0e0;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;background:#fafafa;}
   .qtd-item input{width:64px;padding:6px;border:1.5px solid #cfcfcf;border-radius:6px;font-size:14px;text-align:center;}
 
-  body.exporting .row .n:empty:before,body.exporting .zona .zn:empty:before,body.exporting .bancada .bn:empty:before,body.exporting .abast-row .an:empty:before,body.exporting .volgrid .vy:empty:before,body.exporting .volgrid .vw:empty:before{content:'';}
+  body.exporting .row .n:empty:before,body.exporting .zona .zn:empty:before,body.exporting .bancada .bn:empty:before,body.exporting .abast-row .an:empty:before,body.exporting .volgrid .vy:empty:before,body.exporting .volgrid .vw:empty:before,body.exporting .volcard .vcell:empty:before{content:'';}
   body.exporting .n:focus,body.exporting .zn:focus,body.exporting .bn:focus{background:transparent;}
   body.exporting .no-print{display:none!important;}
 
@@ -166,7 +174,7 @@
     body{background:#fff;}
     .toolbar,.tabs,#view-regras,.no-print{display:none!important;}
     .folha{box-shadow:none;margin:0;max-width:none;border-radius:0;padding:0;}
-    .row .n:empty:before,.zona .zn:empty:before,.bancada .bn:empty:before,.abast-row .an:empty:before,.volgrid .vy:empty:before,.volgrid .vw:empty:before{content:'';}
+    .row .n:empty:before,.zona .zn:empty:before,.bancada .bn:empty:before,.abast-row .an:empty:before,.volgrid .vy:empty:before,.volgrid .vw:empty:before,.volcard .vcell:empty:before{content:'';}
     .n:focus,.zn:focus,.bn:focus{background:transparent;}
   }
 </style>
@@ -290,51 +298,7 @@
   <!-- ===== VOLUMOSO ===== -->
   <div class="volbox">
     <div class="vtit">VOLUMOSO</div>
-    <div class="volgrid">
-      <!-- cabeçalho -->
-      <div class="vh">Etiquetagem</div><div class="vh">Etiquetagem</div><div class="vh">Abastecimento</div>
-      <div class="vh">Guardar</div><div class="vh">Guardar Big</div><div class="vh">P.S Volumoso</div>
-      <!-- linha 1 -->
-      <div class="vy" data-k data-area="volumoso">Felipe Laes</div>
-      <div class="vy" data-k data-area="volumoso">Gabriel Eugenio</div>
-      <div class="vy" data-k data-area="volumoso">Polly</div>
-      <div class="vw" data-k data-area="volumoso">Igor de Souza</div>
-      <div class="vw" data-k data-area="volumoso">Henrique da Silva</div>
-      <div class="vy" data-k data-area="volumoso">Lyandra</div>
-      <!-- linha 2 -->
-      <div class="vlbl">5S</div><div class="vlbl">Carrinho</div><div class="vlbl">Abastecimento</div>
-      <div class="vw" data-k data-area="volumoso">Diogo Gomes</div>
-      <div class="vw" data-k data-area="volumoso">Lucas Barbosa</div>
-      <div class="vy" data-k data-area="volumoso">Marisa</div>
-      <!-- linha 3 -->
-      <div class="vy" data-k data-area="volumoso">Carlos A.</div>
-      <div class="vy" data-k data-area="volumoso">Polly</div>
-      <div class="vy" data-k data-area="volumoso">Polly</div>
-      <div class="vw" data-k data-area="volumoso">Paulo Vinicius</div>
-      <div class="vw" data-k data-area="volumoso">Thiago Stevao</div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <!-- linha 4 -->
-      <div class="vlbl">Responsável</div>
-      <div class="vw" data-k data-area="volumoso">Weller</div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <!-- linha 5 -->
-      <div class="vlbl">Responsável</div>
-      <div class="vw" data-k data-area="volumoso">Jeff</div>
-      <div class="vlbl">Stage</div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <!-- linha 6 -->
-      <div class="vlbl">Responsável</div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <div class="vw" data-k data-area="volumoso"></div>
-      <div class="vw" data-k data-area="volumoso"></div>
-    </div>
+    <div class="volcols" id="volDyn"></div>
   </div>
 </div>
 </div>
@@ -387,13 +351,17 @@
 
   <div class="sec">
     <h3><span class="num">6</span> Equilibrar a sobra</h3>
-    <p class="cont" style="margin:0 0 10px">Quem sobrar depois de preencher as posições é distribuído de forma <b>balanceada</b> entre as áreas marcadas (a com menos gente recebe primeiro). Cada vaga pode receber mais de um nome.</p>
+    <p class="cont" style="margin:0 0 10px">Quem sobrar depois de preencher as posições é distribuído em <b>rodízio</b> entre as áreas marcadas (espalha 1 em cada antes de empilhar). Marque todas as áreas que podem receber gente.</p>
     <div class="radios">
       <label><input type="checkbox" id="eqSort" checked> Sorting (docas)</label>
       <label><input type="checkbox" id="eqVol" checked> Volumoso</label>
       <label><input type="checkbox" id="eqSacas" checked> Sacas</label>
+      <label><input type="checkbox" id="eqResp"> Responsável Sorting</label>
+      <label><input type="checkbox" id="eqTps" checked> Tratar PS</label>
+      <label><input type="checkbox" id="eqCaca" checked> Caça</label>
+      <label><input type="checkbox" id="eqExp" checked> Expedição AM001</label>
     </div>
-    <div class="opt" style="margin-top:10px">Máx. de nomes por vaga no Sorting:
+    <div class="opt" style="margin-top:10px">Máx. de nomes por vaga (em todas as áreas do equilíbrio):
       <input type="number" id="maxSort" value="3" min="1" max="10" style="width:60px;padding:5px;border:1.5px solid #cfcfcf;border-radius:6px;margin-left:6px">
     </div>
   </div>
@@ -463,29 +431,51 @@ const ZCONF={
 };
 const zonasOrdem=['resp','tps','sacas','caca','exp'];
 const qtdLabels={abast:'Resp. Abastecimento',resp:'Responsável Sorting',tps:'Tratar PS',sacas:'Sacas',caca:'Caça',exp:'Expedição AM001'};
-// carrega quantidades salvas antes de renderizar
-(function(){ try{ const r=JSON.parse(localStorage.getItem(RKEY)); if(r&&r.qtd) Object.keys(r.qtd).forEach(k=>{ if(ZCONF[k]&&r.qtd[k]!=null) ZCONF[k].qtd=r.qtd[k]; }); }catch(e){} })();
+// ===== Áreas do Volumoso (também configuráveis) =====
+const VOLCONF={
+  vEtiq:{label:'Etiquetagem', qtd:6, am:true, seed:['Felipe Laes','Gabriel Eugenio','Carlos A.','Polly','','']},
+  vAbast:{label:'Abastecimento', qtd:3, am:true, seed:['Polly','Polly','']},
+  vGuardar:{label:'Guardar', qtd:3, am:false, seed:['Igor de Souza','Diogo Gomes','Paulo Vinicius']},
+  vBig:{label:'Guardar Big', qtd:3, am:false, seed:['Henrique da Silva','Lucas Barbosa','Thiago Stevao']},
+  vPS:{label:'P.S Volumoso', qtd:2, am:true, seed:['Lyandra','Marisa']},
+  v5S:{label:'5S', qtd:1, am:true, seed:['Carlos A.']},
+  vCarr:{label:'Carrinho', qtd:1, am:false, seed:['Polly']},
+  vStage:{label:'Stage', qtd:1, am:false, seed:['']},
+  vResp:{label:'Responsável', qtd:3, am:false, seed:['Weller','Jeff','']},
+};
+const volOrdem=['vEtiq','vAbast','vGuardar','vBig','vPS','v5S','vCarr','vStage','vResp'];
+const volLabels={vEtiq:'Vol. Etiquetagem',vAbast:'Vol. Abastecimento',vGuardar:'Vol. Guardar',vBig:'Vol. Guardar Big',vPS:'Vol. P.S',v5S:'Vol. 5S',vCarr:'Vol. Carrinho',vStage:'Vol. Stage',vResp:'Vol. Responsável'};
+// carrega quantidades salvas antes de renderizar (ZCONF + VOLCONF)
+(function(){ try{ const r=JSON.parse(localStorage.getItem(RKEY)); if(r&&r.qtd) Object.keys(r.qtd).forEach(k=>{ if(ZCONF[k]&&r.qtd[k]!=null) ZCONF[k].qtd=r.qtd[k]; if(VOLCONF[k]&&r.qtd[k]!=null) VOLCONF[k].qtd=r.qtd[k]; }); }catch(e){} })();
 
 function renderAbast(){ const c=ZCONF.abast; let h='';
   for(let i=0;i<c.qtd;i++) h+=`<div class="an" data-k="abast${i}" contenteditable="true">${c.seed[i]||''}</div>`;
   document.getElementById('abastRow').innerHTML=h; }
 function renderZonas(){ let h='';
   zonasOrdem.forEach(k=>{ const c=ZCONF[k]; let cl='';
-    for(let i=0;i<c.qtd;i++){ const z=c.zona?` data-zona="${c.zona}"`:''; cl+=`<div class="zn" data-k="${k}${i}" data-area="apoio"${z} contenteditable="true">${c.seed[i]||''}</div>`; }
+    for(let i=0;i<c.qtd;i++){ cl+=`<div class="zn" data-k="${k}${i}" data-area="apoio" data-zona="${k}" contenteditable="true">${c.seed[i]||''}</div>`; }
     h+=`<div class="zona"><div class="zh ${c.am?'am':''}">${c.label}</div>${cl}</div>`; });
   document.getElementById('zonasDyn').innerHTML=h; }
 renderAbast(); renderZonas();
+function renderVolumoso(){ let h='';
+  volOrdem.forEach(k=>{ const c=VOLCONF[k]; let cl='';
+    for(let i=0;i<c.qtd;i++) cl+=`<div class="vcell" data-k="${k}${i}" data-area="volumoso" data-zona="${k}" contenteditable="true">${c.seed[i]||''}</div>`;
+    h+=`<div class="volcard"><div class="vch ${c.am?'am':''}">${c.label}</div>${cl}</div>`; });
+  document.getElementById('volDyn').innerHTML=h; }
+renderVolumoso();
 
 function renderQtdGrid(){ const g=document.getElementById('qtdGrid'); g.innerHTML='';
-  ['abast',...zonasOrdem].forEach(k=>{ const d=document.createElement('div'); d.className='qtd-item';
-    d.innerHTML=`<span>${qtdLabels[k]}</span><input type="number" min="0" max="30" value="${ZCONF[k].qtd}">`;
-    d.querySelector('input').addEventListener('change',e=>setQtd(k,e.target.value));
-    g.appendChild(d); }); }
+  const add=(k,label,qtd)=>{ const d=document.createElement('div'); d.className='qtd-item';
+    d.innerHTML=`<span>${label}</span><input type="number" min="0" max="30" value="${qtd}">`;
+    d.querySelector('input').addEventListener('change',e=>setQtd(k,e.target.value)); g.appendChild(d); };
+  ['abast',...zonasOrdem].forEach(k=>add(k,qtdLabels[k],ZCONF[k].qtd));
+  volOrdem.forEach(k=>add(k,volLabels[k],VOLCONF[k].qtd));
+}
 
 function setQtd(key,val){ val=Math.max(0,Math.min(30,parseInt(val)||0));
   salvar();                       // guarda valores atuais por chave
-  ZCONF[key].qtd=val;
-  if(key==='abast') renderAbast(); else renderZonas();
+  if(VOLCONF[key]){ VOLCONF[key].qtd=val; renderVolumoso(); }
+  else { ZCONF[key].qtd=val; if(key==='abast') renderAbast(); else renderZonas(); }
   indexar(); carregar();          // recria campos e restaura nomes salvos
   salvarRegras(); setStatus('✓ quantidade ajustada'); }
 
@@ -504,7 +494,7 @@ function salvar(){ try{ localStorage.setItem(KEY,JSON.stringify(coletar())); set
 function aplicar(d){ if(d&&d.cells) cells.forEach(c=>{ if(d.cells[c.dataset.k]!=null) c.innerText=d.cells[c.dataset.k]; }); }
 function carregar(){ try{ aplicar(JSON.parse(localStorage.getItem(KEY))); }catch(e){} }
 carregar();
-Object.values(ZCONF).forEach(z=>z.seed=[]);  // após 1ª carga, valores vêm do save
+Object.values(ZCONF).forEach(z=>z.seed=[]); Object.values(VOLCONF).forEach(z=>z.seed=[]);  // após 1ª carga, valores vêm do save
 
 (function(){ const segs=document.querySelectorAll('.beltseg');
   [0,1].forEach(i=>{ if(segs[i]){ const p=document.createElement('div'); p.className='pacote'; segs[i].insertBefore(p,segs[i].firstChild);} });
@@ -607,17 +597,20 @@ const absorvedores={
   sort:()=>Array.from(document.querySelectorAll('[data-area="sort"]')).filter(c=>ativo[c.dataset.grp]),
   volumoso:()=>Array.from(document.querySelectorAll('[data-area="volumoso"]')),
   sacas:()=>Array.from(document.querySelectorAll('[data-zona="sacas"]')),
+  resp:()=>Array.from(document.querySelectorAll('[data-zona="resp"]')),
+  tps:()=>Array.from(document.querySelectorAll('[data-zona="tps"]')),
+  caca:()=>Array.from(document.querySelectorAll('[data-zona="caca"]')),
+  exp:()=>Array.from(document.querySelectorAll('[data-zona="exp"]')),
 };
+const eqLabels={sort:'Sorting',volumoso:'Volumoso',sacas:'Sacas',resp:'Responsável Sorting',tps:'Tratar PS',caca:'Caça',exp:'Expedição AM001'};
+const eqChecks={sort:'eqSort',volumoso:'eqVol',sacas:'eqSacas',resp:'eqResp',tps:'eqTps',caca:'eqCaca',exp:'eqExp'};
+const eqOrdem=['sort','volumoso','sacas','resp','tps','caca','exp'];
 function nNomes(c){ const t=c.innerText.trim(); return t? t.split('/').filter(s=>s.trim()).length : 0; }
 function norm(s){ return (s||'').trim().toLowerCase(); }
 function equilibrar(sobra, colocados){
   colocados = colocados || new Set();
-  const sel=[];
-  if(document.getElementById('eqSort').checked) sel.push('sort');
-  if(document.getElementById('eqVol').checked) sel.push('volumoso');
-  if(document.getElementById('eqSacas').checked) sel.push('sacas');
-  const capSort=parseInt(document.getElementById('maxSort').value)||3;
-  const caps={sort:capSort, volumoso:Infinity, sacas:Infinity};
+  const sel=eqOrdem.filter(k=>document.getElementById(eqChecks[k]).checked);
+  const cap=parseInt(document.getElementById('maxSort').value)||3;   // teto por vaga, igual pra todas
   let areas=sel.map(k=>({k,cells:absorvedores[k]()})).filter(a=>a.cells.length>0);
   if(!areas.length) return {restante:sobra, areas:[], usados:{}};
   const usados={}; sel.forEach(k=>usados[k]=0);
@@ -627,7 +620,7 @@ function equilibrar(sobra, colocados){
     let colocou=false;
     for(let tries=0; tries<areas.length; tries++){
       const a=areas[i%areas.length]; i++;
-      const disp=a.cells.filter(c=>nNomes(c)<caps[a.k]);
+      const disp=a.cells.filter(c=>nNomes(c)<cap);
       if(disp.length){
         disp.sort((x,y)=>nNomes(x)-nNomes(y));
         const cell=disp[0]; const cur=cell.innerText.trim();
@@ -655,9 +648,7 @@ function distribuir(){
   if(document.getElementById('optVolumoso').checked) slots=slots.concat(slotsDe('volumoso'));
   if(!lock){
     slots.forEach(s=>s.innerText='');
-    if(document.getElementById('eqSort').checked) absorvedores.sort().forEach(c=>c.innerText='');
-    if(document.getElementById('eqVol').checked) absorvedores.volumoso().forEach(c=>c.innerText='');
-    if(document.getElementById('eqSacas').checked) absorvedores.sacas().forEach(c=>c.innerText='');
+    eqOrdem.forEach(k=>{ if(document.getElementById(eqChecks[k]).checked) absorvedores[k]().forEach(c=>c.innerText=''); });
   }
 
   // nomes que JÁ estão na planta (manuais/preservados) — não podem ser substituídos nem repetidos
@@ -688,8 +679,7 @@ function distribuir(){
   if(dupLista) html+=`<div class="sobra">ℹ ${dupLista} nome(s) repetido(s) na lista foram ignorados.</div>`;
   if(!sobra.length && !rest.length) html+=`<div class="sobra" style="color:#1c7a1c">✓ Todos couberam — sem excedente.</div>`;
   if(sobra.length && eqInfo.areas.length){
-    const nomesArea={sort:'Sorting',volumoso:'Volumoso',sacas:'Sacas'};
-    const det=eqInfo.areas.map(a=>`${nomesArea[a]}: ${eqInfo.usados[a]||0}`).join(' · ');
+    const det=eqInfo.areas.map(a=>`${eqLabels[a]}: ${eqInfo.usados[a]||0}`).join(' · ');
     html+=`<div class="sobra" style="color:#1c7a1c">↻ ${sobra.length-rest.length} excedente(s) equilibrado(s) → ${det}</div>`;
   }
   if(rest.length) html+=`<div class="sobra">⚠ ${rest.length} sem vaga (áreas no teto): ${rest.join(', ')}</div>`;
@@ -713,8 +703,8 @@ function salvarRegras(){ try{ localStorage.setItem(RKEY,JSON.stringify({
   ordem:document.querySelector('input[name=ordem]:checked').value,
   lock:document.getElementById('optLock').checked, apoio:document.getElementById('optApoio').checked,
   volumoso:document.getElementById('optVolumoso').checked,
-  eq:{sort:document.getElementById('eqSort').checked,vol:document.getElementById('eqVol').checked,sacas:document.getElementById('eqSacas').checked,max:document.getElementById('maxSort').value},
-  qtd:Object.fromEntries(Object.keys(ZCONF).map(k=>[k,ZCONF[k].qtd]))
+  eq:{sort:document.getElementById('eqSort').checked,vol:document.getElementById('eqVol').checked,sacas:document.getElementById('eqSacas').checked,resp:document.getElementById('eqResp').checked,tps:document.getElementById('eqTps').checked,caca:document.getElementById('eqCaca').checked,exp:document.getElementById('eqExp').checked,max:document.getElementById('maxSort').value},
+  qtd:Object.assign(Object.fromEntries(Object.keys(ZCONF).map(k=>[k,ZCONF[k].qtd])), Object.fromEntries(Object.keys(VOLCONF).map(k=>[k,VOLCONF[k].qtd])))
 }));}catch(e){} }
 function carregarRegras(){ try{ const d=JSON.parse(localStorage.getItem(RKEY)); if(!d)return;
   if(d.pessoas!=null) document.getElementById('pessoas').value=d.pessoas;
@@ -725,11 +715,14 @@ function carregarRegras(){ try{ const d=JSON.parse(localStorage.getItem(RKEY)); 
   if(d.lock!=null) document.getElementById('optLock').checked=d.lock;
   if(d.apoio!=null) document.getElementById('optApoio').checked=d.apoio;
   if(d.volumoso!=null) document.getElementById('optVolumoso').checked=d.volumoso;
-  if(d.eq){ document.getElementById('eqSort').checked=!!d.eq.sort; document.getElementById('eqVol').checked=!!d.eq.vol; document.getElementById('eqSacas').checked=!!d.eq.sacas; if(d.eq.max) document.getElementById('maxSort').value=d.eq.max; }
+  if(d.eq){ document.getElementById('eqSort').checked=!!d.eq.sort; document.getElementById('eqVol').checked=!!d.eq.vol; document.getElementById('eqSacas').checked=!!d.eq.sacas;
+    if(d.eq.resp!=null)document.getElementById('eqResp').checked=!!d.eq.resp; if(d.eq.tps!=null)document.getElementById('eqTps').checked=!!d.eq.tps;
+    if(d.eq.caca!=null)document.getElementById('eqCaca').checked=!!d.eq.caca; if(d.eq.exp!=null)document.getElementById('eqExp').checked=!!d.eq.exp;
+    if(d.eq.max) document.getElementById('maxSort').value=d.eq.max; }
 }catch(e){} }
 carregarRegras(); renderPrio(); renderToggles(); renderQtdGrid(); contarPessoas();
 showTab('regras');
-['optLock','optApoio','optVolumoso','eqSort','eqVol','eqSacas','maxSort'].forEach(id=>document.getElementById(id).addEventListener('change',salvarRegras));
+['optLock','optApoio','optVolumoso','eqSort','eqVol','eqSacas','eqResp','eqTps','eqCaca','eqExp','maxSort'].forEach(id=>document.getElementById(id).addEventListener('change',salvarRegras));
 document.querySelectorAll('input[name=ordem]').forEach(r=>r.addEventListener('change',salvarRegras));
 </script>
 </body>
