@@ -159,11 +159,12 @@
 
   body.exporting .row .n:empty:before,body.exporting .zona .zn:empty:before,body.exporting .bancada .bn:empty:before,body.exporting .abast-row .an:empty:before,body.exporting .volgrid .vy:empty:before,body.exporting .volgrid .vw:empty:before{content:'';}
   body.exporting .n:focus,body.exporting .zn:focus,body.exporting .bn:focus{background:transparent;}
+  body.exporting .no-print{display:none!important;}
 
   @media print{
     @page{size:A4 landscape;margin:6mm;}
     body{background:#fff;}
-    .toolbar,.tabs,#view-regras{display:none!important;}
+    .toolbar,.tabs,#view-regras,.no-print{display:none!important;}
     .folha{box-shadow:none;margin:0;max-width:none;border-radius:0;padding:0;}
     .row .n:empty:before,.zona .zn:empty:before,.bancada .bn:empty:before,.abast-row .an:empty:before,.volgrid .vy:empty:before,.volgrid .vw:empty:before{content:'';}
     .n:focus,.zn:focus,.bn:focus{background:transparent;}
@@ -187,8 +188,8 @@
 </div>
 
 <div class="tabs">
-  <button class="tab active" id="tab-planta" onclick="showTab('planta')">📐 Planta</button>
-  <button class="tab" id="tab-regras" onclick="showTab('regras')">⚙️ Regras / Auto-preencher</button>
+  <button class="tab active" id="tab-regras" onclick="showTab('regras')">⚙️ Regras / Auto-preencher</button>
+  <button class="tab" id="tab-planta" onclick="showTab('planta')">📐 Planta</button>
 </div>
 
 <!-- ===================== VIEW: PLANTA ===================== -->
@@ -206,6 +207,7 @@
     <div class="it"><span class="chip pesca"></span> Pesca</div>
     <div class="it"><span class="chip sort"></span> Sorting</div>
     <div class="it">↓ sentido do fluxo</div>
+    <button class="btn ghost no-print" style="margin-left:auto" onclick="limpar()">🧹 Limpar todos os nomes</button>
   </div>
 
   <!-- Responsável pelo abastecimento (acima da bipagem) -->
@@ -378,7 +380,7 @@
 
   <div class="sec">
     <h3><span class="num">5</span> Opções</h3>
-    <div class="opt"><input type="checkbox" id="optLock"> <label for="optLock">Não sobrescrever campos já preenchidos na mão (só completa os vazios)</label></div>
+    <div class="opt"><input type="checkbox" id="optLock" checked> <label for="optLock">Não substituir nomes já escritos na planta (só preenche os vazios e não repete esses nomes em outra área)</label></div>
     <div class="opt"><input type="checkbox" id="optApoio"> <label for="optApoio">Incluir zonas de apoio (Sacas, Caça, GOL, TSI, Expedição) na distribuição</label></div>
     <div class="opt"><input type="checkbox" id="optVolumoso"> <label for="optVolumoso">Incluir o bloco Volumoso na distribuição</label></div>
   </div>
@@ -450,7 +452,7 @@ const todasDocas=[...docasEsq,...docasDir];
 const bancadasIds=['B1','B2','B3','B4','B5','B6'];
 
 /* ===== Zonas com quantidade configurável ===== */
-const RKEY='planta_sorting_regras_v1';
+const RKEY='planta_sorting_regras_v2';
 const ZCONF={
   abast:{label:'RESPONSÁVEL ABASTECIMENTO', qtd:4, seed:[]},
   resp:{label:'Responsável Sorting', qtd:2, am:true, seed:['Silas','Rafa']},
@@ -607,7 +609,9 @@ const absorvedores={
   sacas:()=>Array.from(document.querySelectorAll('[data-zona="sacas"]')),
 };
 function nNomes(c){ const t=c.innerText.trim(); return t? t.split('/').filter(s=>s.trim()).length : 0; }
-function equilibrar(sobra){
+function norm(s){ return (s||'').trim().toLowerCase(); }
+function equilibrar(sobra, colocados){
+  colocados = colocados || new Set();
   const sel=[];
   if(document.getElementById('eqSort').checked) sel.push('sort');
   if(document.getElementById('eqVol').checked) sel.push('volumoso');
@@ -619,6 +623,7 @@ function equilibrar(sobra){
   const usados={}; sel.forEach(k=>usados[k]=0);
   let i=0; const restante=[];
   for(const pessoa of sobra){
+    if(colocados.has(norm(pessoa))) continue;       // já está na planta, não repete
     let colocou=false;
     for(let tries=0; tries<areas.length; tries++){
       const a=areas[i%areas.length]; i++;
@@ -627,7 +632,7 @@ function equilibrar(sobra){
         disp.sort((x,y)=>nNomes(x)-nNomes(y));
         const cell=disp[0]; const cur=cell.innerText.trim();
         cell.innerText = cur? (cur+' / '+pessoa) : pessoa;
-        usados[a.k]++; colocou=true; break;
+        usados[a.k]++; colocados.add(norm(pessoa)); colocou=true; break;
       }
     }
     if(!colocou) restante.push(pessoa);
@@ -636,7 +641,13 @@ function equilibrar(sobra){
 }
 
 function distribuir(){
-  let pessoas=ordenar(parsePessoas());
+  const listaOrig=parsePessoas();
+  let pessoas=ordenar(listaOrig);
+  // remove duplicados da própria lista (mantém a 1ª ocorrência)
+  const vistos=new Set();
+  pessoas=pessoas.filter(n=>{ const k=norm(n); if(!k||vistos.has(k))return false; vistos.add(k); return true; });
+  const dupLista=listaOrig.filter(n=>n.trim()).length - pessoas.length;
+
   const lock=document.getElementById('optLock').checked;
   let slots=[];
   prioridade.forEach(p=>{ slots=slots.concat(slotsDe(p.k)); });
@@ -648,17 +659,34 @@ function distribuir(){
     if(document.getElementById('eqVol').checked) absorvedores.volumoso().forEach(c=>c.innerText='');
     if(document.getElementById('eqSacas').checked) absorvedores.sacas().forEach(c=>c.innerText='');
   }
+
+  // nomes que JÁ estão na planta (manuais/preservados) — não podem ser substituídos nem repetidos
+  const colocados=new Set();
+  cells.forEach(c=>{ c.innerText.split('/').forEach(n=>{ const k=norm(n); if(k) colocados.add(k); }); });
+  // tira da lista quem já está na planta (evita repetir o mesmo nome em outra área)
+  const antes=pessoas.length;
+  pessoas=pessoas.filter(n=>!colocados.has(norm(n)));
+  const jaNaPlanta=antes-pessoas.length;
+
+  // preenche só as vagas vazias (nunca sobrescreve o que está escrito)
   let usadas=0;
-  for(const s of slots){ if(lock && s.innerText.trim()!=='') continue; if(usadas>=pessoas.length) break; s.innerText=pessoas[usadas++]; }
+  for(const s of slots){
+    if(s.innerText.trim()!=='') continue;
+    if(usadas>=pessoas.length) break;
+    const nome=pessoas[usadas++]; s.innerText=nome; colocados.add(norm(nome));
+  }
   const sobra=pessoas.slice(usadas);
   const vazias=slots.filter(s=>s.innerText.trim()==='').length;
-  let eqInfo={restante:sobra, areas:[]};
-  if(sobra.length) eqInfo=equilibrar(sobra);
+  let eqInfo={restante:sobra, areas:[], usados:{}};
+  if(sobra.length) eqInfo=equilibrar(sobra, colocados);
   salvar();
+
   const rest=eqInfo.restante;
   const r=document.getElementById('resultado'); r.className='resultado show'+((rest.length||vazias)?' warn':'');
   let html=`<b>✓ Distribuição concluída</b><br>${usadas} pessoa(s) nas posições · ${slots.length} posições · ${vazias} vazia(s)`;
-  if(!sobra.length) html+=`<div class="sobra" style="color:#1c7a1c">✓ Todos couberam — sem excedente.</div>`;
+  if(jaNaPlanta) html+=`<div class="sobra" style="color:#1c7a1c">✓ ${jaNaPlanta} nome(s) da lista já estavam na planta — mantidos, sem repetir.</div>`;
+  if(dupLista) html+=`<div class="sobra">ℹ ${dupLista} nome(s) repetido(s) na lista foram ignorados.</div>`;
+  if(!sobra.length && !rest.length) html+=`<div class="sobra" style="color:#1c7a1c">✓ Todos couberam — sem excedente.</div>`;
   if(sobra.length && eqInfo.areas.length){
     const nomesArea={sort:'Sorting',volumoso:'Volumoso',sacas:'Sacas'};
     const det=eqInfo.areas.map(a=>`${nomesArea[a]}: ${eqInfo.usados[a]||0}`).join(' · ');
@@ -700,6 +728,7 @@ function carregarRegras(){ try{ const d=JSON.parse(localStorage.getItem(RKEY)); 
   if(d.eq){ document.getElementById('eqSort').checked=!!d.eq.sort; document.getElementById('eqVol').checked=!!d.eq.vol; document.getElementById('eqSacas').checked=!!d.eq.sacas; if(d.eq.max) document.getElementById('maxSort').value=d.eq.max; }
 }catch(e){} }
 carregarRegras(); renderPrio(); renderToggles(); renderQtdGrid(); contarPessoas();
+showTab('regras');
 ['optLock','optApoio','optVolumoso','eqSort','eqVol','eqSacas','maxSort'].forEach(id=>document.getElementById(id).addEventListener('change',salvarRegras));
 document.querySelectorAll('input[name=ordem]').forEach(r=>r.addEventListener('change',salvarRegras));
 </script>
