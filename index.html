@@ -345,29 +345,11 @@
   <div class="sec">
     <h3><span class="num">5</span> Opções</h3>
     <div class="opt"><input type="checkbox" id="optLock" checked> <label for="optLock">Não substituir nomes já escritos na planta (só preenche os vazios e não repete esses nomes em outra área)</label></div>
-    <div class="opt"><input type="checkbox" id="optApoio"> <label for="optApoio">Incluir zonas de apoio (Sacas, Caça, GOL, TSI, Expedição) na distribuição</label></div>
-    <div class="opt"><input type="checkbox" id="optVolumoso"> <label for="optVolumoso">Incluir o bloco Volumoso na distribuição</label></div>
+    <p class="cont" style="margin:8px 0 0">A quantidade definida em cada área (seção 6) é exatamente o número de pessoas que entram nela — 1 por linha. Todas as áreas são preenchidas; quem sobrar (mais gente que vagas) é avisado pra você aumentar a quantidade.</p>
   </div>
 
   <div class="sec">
-    <h3><span class="num">6</span> Equilibrar a sobra</h3>
-    <p class="cont" style="margin:0 0 10px">Quem sobrar depois de preencher as posições é distribuído em <b>rodízio</b> entre as áreas marcadas (espalha 1 em cada antes de empilhar). Marque todas as áreas que podem receber gente.</p>
-    <div class="radios">
-      <label><input type="checkbox" id="eqSort" checked> Sorting (docas)</label>
-      <label><input type="checkbox" id="eqVol" checked> Volumoso</label>
-      <label><input type="checkbox" id="eqSacas" checked> Sacas</label>
-      <label><input type="checkbox" id="eqResp"> Responsável Sorting</label>
-      <label><input type="checkbox" id="eqTps" checked> Tratar PS</label>
-      <label><input type="checkbox" id="eqCaca" checked> Caça</label>
-      <label><input type="checkbox" id="eqExp" checked> Expedição AM001</label>
-    </div>
-    <div class="opt" style="margin-top:10px">Máx. de nomes por vaga (em todas as áreas do equilíbrio):
-      <input type="number" id="maxSort" value="3" min="1" max="10" style="width:60px;padding:5px;border:1.5px solid #cfcfcf;border-radius:6px;margin-left:6px">
-    </div>
-  </div>
-
-  <div class="sec">
-    <h3><span class="num">7</span> Quantidade de pessoas por área</h3>
+    <h3><span class="num">6</span> Quantidade de pessoas por área</h3>
     <p class="cont" style="margin:0 0 10px">Defina quantos campos cada área terá na planta. Os nomes já preenchidos são mantidos ao mudar a quantidade.</p>
     <div class="qtd-grid" id="qtdGrid"></div>
   </div>
@@ -449,7 +431,7 @@ const volLabels={vEtiq:'Vol. Etiquetagem',vAbast:'Vol. Abastecimento',vGuardar:'
 (function(){ try{ const r=JSON.parse(localStorage.getItem(RKEY)); if(r&&r.qtd) Object.keys(r.qtd).forEach(k=>{ if(ZCONF[k]&&r.qtd[k]!=null) ZCONF[k].qtd=r.qtd[k]; if(VOLCONF[k]&&r.qtd[k]!=null) VOLCONF[k].qtd=r.qtd[k]; }); }catch(e){} })();
 
 function renderAbast(){ const c=ZCONF.abast; let h='';
-  for(let i=0;i<c.qtd;i++) h+=`<div class="an" data-k="abast${i}" contenteditable="true">${c.seed[i]||''}</div>`;
+  for(let i=0;i<c.qtd;i++) h+=`<div class="an" data-k="abast${i}" data-area="apoio" data-zona="abast" contenteditable="true">${c.seed[i]||''}</div>`;
   document.getElementById('abastRow').innerHTML=h; }
 function renderZonas(){ let h='';
   zonasOrdem.forEach(k=>{ const c=ZCONF[k]; let cl='';
@@ -582,8 +564,7 @@ function puxarNomes(){ const vals=[]; document.querySelectorAll('[data-area]').f
 
 function slotsDe(area){
   return Array.from(document.querySelectorAll(`[data-area="${area}"]`)).filter(c=>{
-    if(area==='apoio') return document.getElementById('optApoio').checked;
-    if(area==='volumoso') return document.getElementById('optVolumoso').checked;
+    if(area==='apoio'||area==='volumoso') return true;
     return ativo[c.dataset.grp];
   });
 }
@@ -602,36 +583,8 @@ const absorvedores={
   caca:()=>Array.from(document.querySelectorAll('[data-zona="caca"]')),
   exp:()=>Array.from(document.querySelectorAll('[data-zona="exp"]')),
 };
-const eqLabels={sort:'Sorting',volumoso:'Volumoso',sacas:'Sacas',resp:'Responsável Sorting',tps:'Tratar PS',caca:'Caça',exp:'Expedição AM001'};
-const eqChecks={sort:'eqSort',volumoso:'eqVol',sacas:'eqSacas',resp:'eqResp',tps:'eqTps',caca:'eqCaca',exp:'eqExp'};
-const eqOrdem=['sort','volumoso','sacas','resp','tps','caca','exp'];
 function nNomes(c){ const t=c.innerText.trim(); return t? t.split('/').filter(s=>s.trim()).length : 0; }
 function norm(s){ return (s||'').trim().toLowerCase(); }
-function equilibrar(sobra, colocados){
-  colocados = colocados || new Set();
-  const sel=eqOrdem.filter(k=>document.getElementById(eqChecks[k]).checked);
-  const cap=parseInt(document.getElementById('maxSort').value)||3;   // teto por vaga, igual pra todas
-  let areas=sel.map(k=>({k,cells:absorvedores[k]()})).filter(a=>a.cells.length>0);
-  if(!areas.length) return {restante:sobra, areas:[], usados:{}};
-  const usados={}; sel.forEach(k=>usados[k]=0);
-  let i=0; const restante=[];
-  for(const pessoa of sobra){
-    if(colocados.has(norm(pessoa))) continue;       // já está na planta, não repete
-    let colocou=false;
-    for(let tries=0; tries<areas.length; tries++){
-      const a=areas[i%areas.length]; i++;
-      const disp=a.cells.filter(c=>nNomes(c)<cap);
-      if(disp.length){
-        disp.sort((x,y)=>nNomes(x)-nNomes(y));
-        const cell=disp[0]; const cur=cell.innerText.trim();
-        cell.innerText = cur? (cur+' / '+pessoa) : pessoa;
-        usados[a.k]++; colocados.add(norm(pessoa)); colocou=true; break;
-      }
-    }
-    if(!colocou) restante.push(pessoa);
-  }
-  return {restante, areas:sel, usados};
-}
 
 function distribuir(){
   const listaOrig=parsePessoas();
@@ -644,12 +597,8 @@ function distribuir(){
   const lock=document.getElementById('optLock').checked;
   let slots=[];
   prioridade.forEach(p=>{ slots=slots.concat(slotsDe(p.k)); });
-  if(document.getElementById('optApoio').checked) slots=slots.concat(slotsDe('apoio'));
-  if(document.getElementById('optVolumoso').checked) slots=slots.concat(slotsDe('volumoso'));
-  if(!lock){
-    slots.forEach(s=>s.innerText='');
-    eqOrdem.forEach(k=>{ if(document.getElementById(eqChecks[k]).checked) absorvedores[k]().forEach(c=>c.innerText=''); });
-  }
+  slots=slots.concat(slotsDe('apoio'), slotsDe('volumoso'));
+  if(!lock){ slots.forEach(s=>s.innerText=''); }
 
   // nomes que JÁ estão na planta (manuais/preservados) — não podem ser substituídos nem repetidos
   const colocados=new Set();
@@ -659,7 +608,7 @@ function distribuir(){
   pessoas=pessoas.filter(n=>!colocados.has(norm(n)));
   const jaNaPlanta=antes-pessoas.length;
 
-  // preenche só as vagas vazias (nunca sobrescreve o que está escrito)
+  // preenche 1 nome por vaga vazia (nunca sobrescreve o que está escrito, nunca empilha)
   let usadas=0;
   for(const s of slots){
     if(s.innerText.trim()!=='') continue;
@@ -668,31 +617,21 @@ function distribuir(){
   }
   const sobra=pessoas.slice(usadas);
   const vazias=slots.filter(s=>s.innerText.trim()==='').length;
-  let eqInfo={restante:sobra, areas:[], usados:{}};
-  if(sobra.length) eqInfo=equilibrar(sobra, colocados);
   salvar();
 
-  const rest=eqInfo.restante;
-  const r=document.getElementById('resultado'); r.className='resultado show'+((rest.length||vazias)?' warn':'');
-  let html=`<b>✓ Distribuição concluída</b><br>${usadas} pessoa(s) nas posições · ${slots.length} posições · ${vazias} vazia(s)`;
+  const r=document.getElementById('resultado'); r.className='resultado show'+((sobra.length||vazias)?' warn':'');
+  let html=`<b>✓ Distribuição concluída</b><br>${usadas} pessoa(s) alocada(s) · ${slots.length} vagas · ${vazias} vaga(s) vazia(s)`;
   if(jaNaPlanta) html+=`<div class="sobra" style="color:#1c7a1c">✓ ${jaNaPlanta} nome(s) da lista já estavam na planta — mantidos, sem repetir.</div>`;
   if(dupLista) html+=`<div class="sobra">ℹ ${dupLista} nome(s) repetido(s) na lista foram ignorados.</div>`;
-  if(!sobra.length && !rest.length) html+=`<div class="sobra" style="color:#1c7a1c">✓ Todos couberam — sem excedente.</div>`;
-  if(sobra.length && eqInfo.areas.length){
-    const det=eqInfo.areas.map(a=>`${eqLabels[a]}: ${eqInfo.usados[a]||0}`).join(' · ');
-    html+=`<div class="sobra" style="color:#1c7a1c">↻ ${sobra.length-rest.length} excedente(s) equilibrado(s) → ${det}</div>`;
-  }
-  if(rest.length) html+=`<div class="sobra">⚠ ${rest.length} sem vaga (áreas no teto): ${rest.join(', ')}</div>`;
-  if(sobra.length && !eqInfo.areas.length) html+=`<div class="sobra">⚠ ${sobra.length} sobraram — marque uma área em "Equilibrar a sobra": ${sobra.join(', ')}</div>`;
-  if(vazias && !sobra.length) html+=`<div class="sobra">⚠ Faltou gente para ${vazias} posição(ões).</div>`;
+  if(!sobra.length && !vazias) html+=`<div class="sobra" style="color:#1c7a1c">✓ Encaixou certinho — cada vaga com 1 pessoa.</div>`;
+  if(sobra.length) html+=`<div class="sobra">⚠ ${sobra.length} pessoa(s) sem vaga. Aumente a quantidade de alguma área na seção 6 pra encaixar: ${sobra.slice(0,15).join(', ')}${sobra.length>15?'…':''}</div>`;
+  if(vazias && !sobra.length) html+=`<div class="sobra">ℹ Sobraram ${vazias} vaga(s) vazia(s) (mais vagas que pessoas).</div>`;
   r.innerHTML=html;
   setStatus('✓ distribuído'); showTab('planta');
 }
 function limparDistribuicao(){
   if(!confirm('Limpar os nomes das posições ATIVAS (bancadas e docas marcadas)?'))return;
-  let slots=[].concat(slotsDe('bip'),slotsDe('etq'),slotsDe('pesca'),slotsDe('sort'));
-  if(document.getElementById('optApoio').checked) slots=slots.concat(slotsDe('apoio'));
-  if(document.getElementById('optVolumoso').checked) slots=slots.concat(slotsDe('volumoso'));
+  let slots=[].concat(slotsDe('bip'),slotsDe('etq'),slotsDe('pesca'),slotsDe('sort'),slotsDe('apoio'),slotsDe('volumoso'));
   slots.forEach(s=>s.innerText=''); salvar(); setStatus('✓ posições limpas');
 }
 
@@ -701,9 +640,7 @@ function salvarRegras(){ try{ localStorage.setItem(RKEY,JSON.stringify({
   pessoas:document.getElementById('pessoas').value,
   ativo, prioridade:prioridade.map(p=>p.k),
   ordem:document.querySelector('input[name=ordem]:checked').value,
-  lock:document.getElementById('optLock').checked, apoio:document.getElementById('optApoio').checked,
-  volumoso:document.getElementById('optVolumoso').checked,
-  eq:{sort:document.getElementById('eqSort').checked,vol:document.getElementById('eqVol').checked,sacas:document.getElementById('eqSacas').checked,resp:document.getElementById('eqResp').checked,tps:document.getElementById('eqTps').checked,caca:document.getElementById('eqCaca').checked,exp:document.getElementById('eqExp').checked,max:document.getElementById('maxSort').value},
+  lock:document.getElementById('optLock').checked,
   qtd:Object.assign(Object.fromEntries(Object.keys(ZCONF).map(k=>[k,ZCONF[k].qtd])), Object.fromEntries(Object.keys(VOLCONF).map(k=>[k,VOLCONF[k].qtd])))
 }));}catch(e){} }
 function carregarRegras(){ try{ const d=JSON.parse(localStorage.getItem(RKEY)); if(!d)return;
@@ -713,16 +650,10 @@ function carregarRegras(){ try{ const d=JSON.parse(localStorage.getItem(RKEY)); 
     prioridade=d.prioridade.filter(k=>map[k]).map(k=>({k,label:map[k]})); }
   if(d.ordem){ const el=document.querySelector(`input[name=ordem][value="${d.ordem}"]`); if(el)el.checked=true; }
   if(d.lock!=null) document.getElementById('optLock').checked=d.lock;
-  if(d.apoio!=null) document.getElementById('optApoio').checked=d.apoio;
-  if(d.volumoso!=null) document.getElementById('optVolumoso').checked=d.volumoso;
-  if(d.eq){ document.getElementById('eqSort').checked=!!d.eq.sort; document.getElementById('eqVol').checked=!!d.eq.vol; document.getElementById('eqSacas').checked=!!d.eq.sacas;
-    if(d.eq.resp!=null)document.getElementById('eqResp').checked=!!d.eq.resp; if(d.eq.tps!=null)document.getElementById('eqTps').checked=!!d.eq.tps;
-    if(d.eq.caca!=null)document.getElementById('eqCaca').checked=!!d.eq.caca; if(d.eq.exp!=null)document.getElementById('eqExp').checked=!!d.eq.exp;
-    if(d.eq.max) document.getElementById('maxSort').value=d.eq.max; }
 }catch(e){} }
 carregarRegras(); renderPrio(); renderToggles(); renderQtdGrid(); contarPessoas();
 showTab('regras');
-['optLock','optApoio','optVolumoso','eqSort','eqVol','eqSacas','eqResp','eqTps','eqCaca','eqExp','maxSort'].forEach(id=>document.getElementById(id).addEventListener('change',salvarRegras));
+document.getElementById('optLock').addEventListener('change',salvarRegras);
 document.querySelectorAll('input[name=ordem]').forEach(r=>r.addEventListener('change',salvarRegras));
 </script>
 </body>
